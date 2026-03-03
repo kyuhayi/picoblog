@@ -1,0 +1,155 @@
+openapi: 3.0.0
+info:
+  title: PicoBlog API
+  description: API for the PicoBlog application based on the Express.js implementation.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+paths:
+  /:
+    get:
+      summary: Root endpoint
+      responses:
+        '200':
+          description: Returns a greeting message
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Hello World! mise와 Express가 잘 연결되었습니다.
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /postings:
+    get:
+      summary: Get all postings
+      description: Retrieve a paginated list of postings without comments.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number (must be positive)
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of items per page (must be positive)
+      responses:
+        '200':
+          description: A paginated list of postings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PostingSnippet'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '400':
+          description: Invalid pagination parameters
+  /posting:
+    post:
+      summary: Create a posting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostingInput'
+      responses:
+        '201':
+          description: Posting created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Posting received successfully
+                  data:
+                    $ref: '#/components/schemas/PostingInput'
+  /posting/{id}/comments:
+    post:
+      summary: Add a comment to a posting
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the posting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentInput'
+      responses:
+        '201':
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Comment received successfully
+                  data:
+                    type: object
+                    description: The created comment combined with the target posting ID
+components:
+  schemas:
+    PostingSnippet:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+    PostingInput:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+    CommentInput:
+      type: object
+      properties:
+        user:
+          type: string
+        comment:
+          type: string
+    PaginationMeta:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+        itemsPerPage:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
